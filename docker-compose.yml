@@ -1,12 +1,55 @@
 version: "3.8"
 
 services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+  # ----------------------
+  # Backend Service
+  # ----------------------
+  backend:
+    build: ./backend
+    container_name: campus-life-backend
     ports:
-      - "3001:3001"
+      - "5000:5000"   # Host:Container
     environment:
-      - NODE_ENV=production
-    restart: unless-stopped
+      NODE_ENV: production
+      # Database URL points to the db container
+      DATABASE_URL: postgres://campus_user:campus_pass@db:5432/campus_life
+    volumes:
+      - backend-data:/app/data
+    depends_on:
+      - db
+
+  # ----------------------
+  # Frontend Service
+  # ----------------------
+  frontend:
+    build: ./frontend
+    container_name: campus-life-frontend
+    ports:
+      - "3000:80"
+    environment:
+      # Use backend service name for internal networking
+      VITE_API_URL: http://backend:5000
+    depends_on:
+      - backend
+
+  # ----------------------
+  # Database Service
+  # ----------------------
+  db:
+    image: postgres:15
+    container_name: campus-life-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: campus_user
+      POSTGRES_PASSWORD: campus_pass
+      POSTGRES_DB: campus_life
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+# ----------------------
+# Volumes for persistent data
+# ----------------------
+volumes:
+  backend-data:
+  db-data:
