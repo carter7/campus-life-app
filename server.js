@@ -4,19 +4,26 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
+
 app.use(express.json());
 app.use(cors());
 
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.log(err));
+// MongoDB connection
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+  .then(() => console.log("MongoDB connected"))
+  .catch(err => console.error(err));
 
-const Event = mongoose.model('Event', new mongoose.Schema({
+// Schema
+const Event = mongoose.model("Event", new mongoose.Schema({
   title: String,
   date: String,
   location: String
 }));
 
+// Routes
 app.get('/events', async (req, res) => {
   const events = await Event.find();
   res.json(events);
@@ -28,4 +35,7 @@ app.post('/events', async (req, res) => {
   res.json(event);
 });
 
-app.listen(5000, () => console.log('Server running on port 5000'));
+// Listen on PORT variable or default to 5000
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
